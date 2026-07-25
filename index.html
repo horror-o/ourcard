@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Our Card</title>
+  <meta name="theme-color" content="#0B3B2E" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="preconnect" href="https://fonts.bunny.net" />
+  <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|ibm-plex-mono:400,500,600&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; }
+    .cl-root {
+      --paper: #F3F6F2;
+      --ink: #17251F;
+      --muted: #68766D;
+      --line: #DCE3DB;
+      --green: #0C8A5F;
+      --green-ink: #0A3D2E;
+      --card-a: #0B3B2E;
+      --card-b: #17654A;
+      --owner-chip: #E4E9F4; --owner-text: #3D5077;
+      --partner-chip: #F1E6F1; --partner-text: #7A4B78;
+      --shared-chip: #DFF0E6; --shared-text: #0C6B4B;
+      --danger: #B23A2E;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --sans: 'Space Grotesk', system-ui, sans-serif;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      display: flex;
+      justify-content: center;
+      padding: 16px 14px 48px;
+      box-sizing: border-box;
+    }
+    .cl-root *, .cl-root *::before, .cl-root *::after { box-sizing: border-box; }
+    .cl-shell { width: 100%; max-width: 430px; }
+
+    .cl-top { display: flex; align-items: baseline; justify-content: space-between; margin: 4px 2px 14px; }
+    .cl-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .cl-live { font-family: var(--mono); font-size: 11px; color: var(--green); }
+    .cl-live.err { color: var(--danger); }
+
+    .cl-card {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, var(--card-a) 0%, var(--card-b) 100%);
+      border-radius: 20px; padding: 20px; color: #EAF4EE;
+      box-shadow: 0 10px 24px rgba(11,59,46,0.22);
+    }
+    .cl-card::after {
+      content: ''; position: absolute; top: -60%; right: -20%;
+      width: 70%; height: 160%;
+      background: radial-gradient(closest-side, rgba(255,255,255,0.14), transparent);
+      pointer-events: none;
+    }
+    .cl-card-row { display: flex; justify-content: space-between; align-items: center; }
+    .cl-chipgfx { width: 34px; height: 24px; border-radius: 5px; background: linear-gradient(160deg, #D8C878, #B49B4E); position: relative; }
+    .cl-chipgfx::before { content: ''; position: absolute; inset: 6px 4px; border: 1px solid rgba(60,45,10,0.4); border-radius: 3px; }
+    .cl-badge { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; background: rgba(255,255,255,0.16); border-radius: 999px; padding: 4px 10px; }
+    .cl-owelabel { margin-top: 16px; font-size: 13px; color: #BCD8C8; }
+    .cl-owe { font-family: var(--mono); font-size: 38px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .cl-substats { display: flex; gap: 18px; margin-top: 14px; font-family: var(--mono); font-size: 11.5px; color: #A7C9B7; }
+    .cl-substats b { color: #EAF4EE; font-weight: 600; }
+
+    .cl-panel { background: #FFFFFF; border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 14px; }
+    .cl-label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
+    .cl-input {
+      width: 100%; border: 1px solid var(--line); border-radius: 10px;
+      padding: 12px; font-size: 16px; font-family: var(--sans);
+      background: #FBFCFA; color: var(--ink); outline: none;
+    }
+    .cl-input:focus-visible { border-color: var(--green); box-shadow: 0 0 0 2px rgba(12,138,95,0.18); }
+    .cl-amt { font-family: var(--mono); font-weight: 600; }
+    .cl-gap { height: 10px; }
+
+    .cl-seg { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .cl-seg.two { grid-template-columns: 1fr 1fr; }
+    .cl-seg button {
+      border: 1px solid var(--line); background: #FBFCFA; color: var(--muted);
+      border-radius: 10px; padding: 10px 4px; font-size: 14px; font-weight: 600;
+      font-family: var(--sans); cursor: pointer; transition: all .12s ease;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cl-seg button.on { background: var(--green-ink); border-color: var(--green-ink); color: #EAF4EE; }
+    .cl-seg button:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+    .cl-seghint { font-size: 12px; color: var(--muted); margin-top: 8px; min-height: 15px; }
+
+    .cl-btn {
+      width: 100%; border: none; border-radius: 12px; padding: 14px;
+      font-size: 16px; font-weight: 700; font-family: var(--sans);
+      background: var(--green-ink); color: #EAF4EE; cursor: pointer; margin-top: 12px;
+      transition: opacity .12s ease;
+    }
+    .cl-btn:disabled { opacity: 0.45; cursor: default; }
+    .cl-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+    .cl-btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 600; }
+    .cl-btn.danger { background: var(--danger); }
+
+    .cl-receipt { background: #FFFFFF; border: 1px solid var(--line); border-radius: 16px; margin-top: 14px; padding: 4px 16px; }
+    .cl-row { display: flex; align-items: center; gap: 10px; padding: 13px 0; border-bottom: 1px dashed var(--line); }
+    .cl-row:last-child { border-bottom: none; }
+    .cl-row-main { flex: 1; min-width: 0; }
+    .cl-row-desc { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cl-row-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 12px; color: var(--muted); }
+    .cl-chip { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 8px; }
+    .cl-chip.owner { background: var(--owner-chip); color: var(--owner-text); }
+    .cl-chip.partner { background: var(--partner-chip); color: var(--partner-text); }
+    .cl-chip.shared { background: var(--shared-chip); color: var(--shared-text); }
+    .cl-row-right { text-align: right; }
+    .cl-row-amt { font-family: var(--mono); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .cl-row-owed { font-family: var(--mono); font-size: 11px; color: var(--green); margin-top: 2px; }
+    .cl-row-owed.none { color: var(--muted); }
+    .cl-x {
+      border: none; background: none; color: var(--muted); font-size: 15px;
+      cursor: pointer; padding: 6px; border-radius: 8px; font-family: var(--sans);
+    }
+    .cl-x.confirm { color: #fff; background: var(--danger); font-size: 12px; font-weight: 700; }
+
+    .cl-empty { padding: 26px 8px; text-align: center; color: var(--muted); font-size: 14px; }
+    .cl-error { margin-top: 12px; background: #FBEAE7; border: 1px solid #E8C4BD; color: var(--danger); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; }
+    .cl-notice { margin-top: 12px; background: #E9F4EE; border: 1px solid #C6E3D3; color: var(--green-ink); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; }
+
+    .cl-hist-toggle { width: 100%; background: none; border: none; color: var(--muted); font-family: var(--mono); font-size: 12px; padding: 16px 0 4px; cursor: pointer; }
+    .cl-hist-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+    .cl-hist-row:last-child { border-bottom: none; }
+    .cl-hist-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .cl-hist-amt { font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .cl-foot { margin-top: 20px; text-align: center; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+
+    .cl-footbtns { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 18px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+    .cl-footbtns button { background: none; border: none; color: var(--muted); font-family: var(--mono); font-size: 11.5px; cursor: pointer; text-decoration: underline; padding: 2px; }
+    .cl-footbtns button:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+
+    .cl-settle-note { font-size: 13.5px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+    .cl-code { font-family: var(--mono); font-size: 12.5px; background: #EEF2ED; border-radius: 6px; padding: 2px 6px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cl-root * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { h, render } from "https://esm.sh/preact@10.22.0";
+    import { useState, useEffect, useRef } from "https://esm.sh/preact@10.22.0/hooks";
+    import htm from "https://esm.sh/htm@3.1.1";
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const html = htm.bind(h);
+
+    // ════════════════════════════════════════════════════════════
+    //  1. PASTE YOUR SUPABASE DETAILS BELOW (see README.md, step 1)
+    // ════════════════════════════════════════════════════════════
+    const SUPABASE_URL = "https://nbswdzcgatosswqmcnup.supabase.co"; // e.g. https://abcd1234.supabase.co
+    const SUPABASE_KEY = "sb_publishable_XB0VAy7SpPyl3r5xkbesRA_pENpbDHV"; // the anon / publishable key
+    // ════════════════════════════════════════════════════════════
+
+    const CONFIGURED = SUPABASE_URL !== "https://nbswdzcgatosswqmcnup.supabase.co" && SUPABASE_KEY !== "sb_publishable_XB0VAy7SpPyl3r5xkbesRA_pENpbDHV";
+    const supabase = CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+    const STORE_KEY = "ourcard-docid";
+
+    const fmt = (cents) =>
+      "$" + (cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // partner -> owes 99% (1% cash-back discount)
+    // shared  -> owes half, minus 1% (49.5%)
+    // owner   -> owes nothing
+    const owedCents = (p) =>
+      p.tag === "partner" ? Math.round(p.cents * 0.99)
+      : p.tag === "shared" ? Math.round(p.cents * 0.495)
+      : 0;
+
+    async function hashPass(pw) {
+      const data = new TextEncoder().encode("ourcard:" + pw);
+      const buf = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    // All database access goes through RPC functions that require knowing the exact ID.
+    async function fetchLedger(id) {
+      const { data, error } = await supabase.rpc("get_ledger", { p_id: id });
+      if (error) throw error;
+      return data; // null if not found, else { data, version }
+    }
+    async function createLedgerRow(id, payload) {
+      const { data, error } = await supabase.rpc("create_ledger", { p_id: id, p_data: payload });
+      if (error) throw error;
+      return data; // false if that ID already exists
+    }
+    async function putLedger(id, payload, version) {
+      const { data, error } = await supabase.rpc("put_ledger", { p_id: id, p_data: payload, p_version: version });
+      if (error) throw error;
+      return data; // false if someone else wrote first (version mismatch)
+    }
+    async function moveLedger(oldId, newId) {
+      const { data, error } = await supabase.rpc("move_ledger", { p_old: oldId, p_new: newId });
+      if (error) throw error;
+      return data; // 'moved' | 'exists' | 'missing'
+    }
+
+    function App() {
+      const [view, setView] = useState("boot"); // boot | config | offline | gate | main
+      const [docId, setDocId] = useState(null);
+      const [data, setData] = useState(null);
+      const [live, setLive] = useState(true);
+      const idRef = useRef(null);
+      const versionRef = useRef(0);
+      const chanRef = useRef(null);
+
+      // gate
+      const [gateTab, setGateTab] = useState("open"); // open | create
+      const [pw, setPw] = useState("");
+      const [ownerName, setOwnerName] = useState("");
+      const [partnerName, setPartnerName] = useState("");
+      const [createPw, setCreatePw] = useState("");
+      const [createPw2, setCreatePw2] = useState("");
+      const [gateMsg, setGateMsg] = useState("");
+      const [gateBusy, setGateBusy] = useState(false);
+
+      // main
+      const [amt, setAmt] = useState("");
+      const [desc, setDesc] = useState("");
+      const [tag, setTag] = useState("shared");
+      const [error, setError] = useState("");
+      const [busy, setBusy] = useState(false);
+      const [settleStep, setSettleStep] = useState(false);
+      const [pendingDelete, setPendingDelete] = useState(null);
+      const [showHistory, setShowHistory] = useState(false);
+      const [pwView, setPwView] = useState(false);
+      const [curPw, setCurPw] = useState("");
+      const [newPw, setNewPw] = useState("");
+      const [newPw2, setNewPw2] = useState("");
+      const [pwError, setPwError] = useState("");
+
+      const leaveChannel = () => {
+        if (chanRef.current) { supabase.removeChannel(chanRef.current); chanRef.current = null; }
+      };
+
+      const joinChannel = (id) => {
+        leaveChannel();
+        chanRef.current = supabase
+          .channel("ledger-" + id.slice(0, 24))
+          .on("broadcast", { event: "changed" }, () => refetch())
+          .subscribe();
+      };
+
+      const pingPeers = () => {
+        try {
+          if (chanRef.current) chanRef.current.send({ type: "broadcast", event: "changed", payload: {} });
+        } catch (e) {}
+      };
+
+      const handleGone = () => {
+        // password changed on another device, or ledger deleted
+        localStorage.removeItem(STORE_KEY);
+        leaveChannel();
+        idRef.current = null;
+        setData(null);
+        setDocId(null);
+        setGateTab("open");
+        setGateMsg("The password was changed — enter the new one.");
+        setView("gate");
+      };
+
+      const refetch = async () => {
+        if (!idRef.current) return;
+        try {
+          const row = await fetchLedger(idRef.current);
+          if (!idRef.current) return;
+          if (!row) { handleGone(); return; }
+          versionRef.current = row.version;
+          setData(row.data);
+          setLive(true);
+        } catch (e) {
+          setLive(false);
+        }
+      };
+
+      const startSession = (id, row) => {
+        idRef.current = id;
+        setDocId(id);
+        versionRef.current = row.version;
+        setData(row.data);
+        joinChannel(id);
+        setLive(true);
+        setView("main");
+      };
+
+      const boot = async () => {
+        const saved = localStorage.getItem(STORE_KEY);
+        if (!saved) { setView("gate"); return; }
+        setView("boot");
+        try {
+          const row = await fetchLedger(saved);
+          if (!row) { handleGone(); return; }
+          startSession(saved, row);
+        } catch (e) {
+          setView("offline");
+        }
+      };
+
+      useEffect(() => {
+        if (!CONFIGURED) { setView("config"); return; }
+        boot();
+        return leaveChannel;
+      }, []);
+
+      // stay fresh: instant pings from the other phone, plus a poll every
+      // 15 s while visible and a refetch whenever the app regains focus
+      useEffect(() => {
+        if (view !== "main") return;
+        const tick = () => { if (document.visibilityState === "visible") refetch(); };
+        const iv = setInterval(tick, 15000);
+        document.addEventListener("visibilitychange", tick);
+        window.addEventListener("focus", tick);
+        return () => {
+          clearInterval(iv);
+          document.removeEventListener("visibilitychange", tick);
+          window.removeEventListener("focus", tick);
+        };
+      }, [view]);
+
+      useEffect(() => {
+        if (!pendingDelete) return;
+        const t = setTimeout(() => setPendingDelete(null), 3000);
+        return () => clearTimeout(t);
+      }, [pendingDelete]);
+
+      // ---------- gate actions ----------
+      const openLedger = async () => {
+        if (!pw) return;
+        setGateBusy(true);
+        setGateMsg("");
+        try {
+          const id = await hashPass(pw);
+          const row = await fetchLedger(id);
+          if (!row) {
+            setGateMsg("No ledger found with that password. Check for typos, or switch to \u201cCreate new\u201d.");
+          } else {
+            localStorage.setItem(STORE_KEY, id);
+            setPw("");
+            startSession(id, row);
+          }
+        } catch (e) {
+          setGateMsg("Couldn't reach the database. Check your connection.");
+        }
+        setGateBusy(false);
+      };
+
+      const createLedger = async () => {
+        const o = ownerName.trim();
+        const p = partnerName.trim();
+        setGateMsg("");
+        if (!o || !p) { setGateMsg("Enter both names."); return; }
+        if (createPw.length < 6) { setGateMsg("Password needs at least 6 characters \u2014 longer is better, it's the key to your data."); return; }
+        if (createPw !== createPw2) { setGateMsg("Passwords don't match."); return; }
+        setGateBusy(true);
+        try {
+          const id = await hashPass(createPw);
+          const payload = { names: { owner: o, partner: p }, purchases: [], settlements: [] };
+          const created = await createLedgerRow(id, payload);
+          if (!created) {
+            setGateMsg("A ledger with that password already exists \u2014 switch to \u201cOpen existing\u201d to use it.");
+          } else {
+            localStorage.setItem(STORE_KEY, id);
+            setCreatePw(""); setCreatePw2("");
+            startSession(id, { data: payload, version: 1 });
+          }
+        } catch (e) {
+          setGateMsg("Couldn't reach the database. Check your connection.");
+        }
+        setGateBusy(false);
+      };
+
+      // ---------- main actions ----------
+      const mutate = async (fn) => {
+        setBusy(true);
+        setError("");
+        try {
+          for (let attempt = 0; attempt < 3; attempt++) {
+            const row = await fetchLedger(idRef.current);
+            if (!row) { handleGone(); setBusy(false); return false; }
+            const next = fn(row.data);
+            const ok = await putLedger(idRef.current, next, row.version);
+            if (ok) {
+              versionRef.current = row.version + 1;
+              setData(next);
+              pingPeers();
+              setBusy(false);
+              return true;
+            }
+            // someone else saved in between \u2014 reload and retry
+          }
+          setError("Couldn't save \u2014 the ledger was busy. Try once more.");
+        } catch (e) {
+          setError("Couldn't save. Check your connection and try again.");
+        }
+        setBusy(false);
+        return false;
+      };
+
+      const addPurchase = async () => {
+        const v = parseFloat(amt.replace(",", "."));
+        if (!isFinite(v) || v <= 0) {
+          setError("Enter an amount above zero.");
+          return;
+        }
+        const purchase = {
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+          cents: Math.round(v * 100),
+          desc: desc.trim() || "Purchase",
+          tag,
+          date: Date.now(),
+        };
+        const ok = await mutate((d) => ({ ...d, purchases: [purchase, ...d.purchases] }));
+        if (ok) { setAmt(""); setDesc(""); }
+      };
+
+      const deletePurchase = async (id) => {
+        if (pendingDelete !== id) { setPendingDelete(id); return; }
+        setPendingDelete(null);
+        await mutate((d) => ({ ...d, purchases: d.purchases.filter((p) => p.id !== id) }));
+      };
+
+      const settleUp = async () => {
+        const ok = await mutate((d) => {
+          const total = d.purchases.reduce((s, p) => s + owedCents(p), 0);
+          const spend = d.purchases.reduce((s, p) => s + p.cents, 0);
+          const record = {
+            id: Date.now().toString(36),
+            date: Date.now(),
+            total,
+            spend,
+            cashback: Math.round(spend * 0.03),
+            count: d.purchases.length,
+          };
+          return { ...d, purchases: [], settlements: [record, ...d.settlements] };
+        });
+        if (ok) setSettleStep(false);
+      };
+
+      const lockDevice = () => {
+        localStorage.removeItem(STORE_KEY);
+        leaveChannel();
+        idRef.current = null;
+        setData(null);
+        setDocId(null);
+        setPw("");
+        setGateTab("open");
+        setGateMsg("");
+        setView("gate");
+      };
+
+      const changePassword = async () => {
+        setPwError("");
+        if (newPw.length < 6) { setPwError("New password needs at least 6 characters."); return; }
+        if (newPw !== newPw2) { setPwError("New passwords don't match."); return; }
+        setBusy(true);
+        try {
+          const curId = await hashPass(curPw);
+          if (curId !== docId) { setPwError("Current password is wrong."); setBusy(false); return; }
+          const newId = await hashPass(newPw);
+          if (newId === docId) { setPwError("That's already the password."); setBusy(false); return; }
+          const status = await moveLedger(docId, newId);
+          if (status === "exists") { setPwError("That password can't be used \u2014 pick a different one."); setBusy(false); return; }
+          if (status === "missing") { handleGone(); setBusy(false); return; }
+          pingPeers(); // still on the old channel: wakes other devices so they lock right away
+          localStorage.setItem(STORE_KEY, newId);
+          idRef.current = newId;
+          setDocId(newId);
+          joinChannel(newId);
+          setCurPw(""); setNewPw(""); setNewPw2("");
+          setPwView(false);
+          await refetch();
+        } catch (e) {
+          setPwError("Couldn't change the password. Try again.");
+        }
+        setBusy(false);
+      };
+
+      // ---------- derived ----------
+      const names = data ? data.names : null;
+      const purchases = data ? data.purchases : [];
+      const settlements = data ? data.settlements : [];
+      const totalOwed = purchases.reduce((s, p) => s + owedCents(p), 0);
+      const totalSpend = purchases.reduce((s, p) => s + p.cents, 0);
+      const cashback = Math.round(totalSpend * 0.03);
+      const tagLabel = (t) => (t === "owner" ? names.owner : t === "partner" ? names.partner : "Shared");
+
+      // ---------- views ----------
+      if (view === "boot") {
+        return html`<div class="cl-root"><div class="cl-shell">
+          <div class="cl-empty" style="padding-top:80px">Opening the ledger\u2026</div>
+        </div></div>`;
+      }
+
+      if (view === "config") {
+        return html`<div class="cl-root"><div class="cl-shell">
+          <div class="cl-top"><div class="cl-title">Our Card</div></div>
+          <div class="cl-panel">
+            <div class="cl-label">One step left</div>
+            <div class="cl-settle-note">
+              This site isn't connected to a database yet. Open
+              <span class="cl-code">index.html</span> in a text editor and paste your
+              Supabase URL and key where marked. Full walkthrough in
+              <span class="cl-code">README.md</span> \u2014 it takes about ten minutes.
+            </div>
+          </div>
+        </div></div>`;
+      }
+
+      if (view === "offline") {
+        return html`<div class="cl-root"><div class="cl-shell">
+          <div class="cl-top"><div class="cl-title">Our Card</div></div>
+          <div class="cl-panel">
+            <div class="cl-label">Can't connect</div>
+            <div class="cl-settle-note">
+              The database isn't reachable right now. Check your connection and
+              try again. (If it's been quiet for over a week, the free database
+              may be paused \u2014 restoring it from the Supabase dashboard takes
+              one click.)
+            </div>
+            <button class="cl-btn" onClick=${boot}>Try again</button>
+          </div>
+        </div></div>`;
+      }
+
+      if (view === "gate") {
+        return html`<div class="cl-root"><div class="cl-shell">
+          <div class="cl-top"><div class="cl-title">Our Card</div></div>
+          <div class="cl-panel">
+            <div class="cl-seg two" style="margin-bottom:12px">
+              <button class=${gateTab === "open" ? "on" : ""} onClick=${() => { setGateTab("open"); setGateMsg(""); }}>Open existing</button>
+              <button class=${gateTab === "create" ? "on" : ""} onClick=${() => { setGateTab("create"); setGateMsg(""); }}>Create new</button>
+            </div>
+
+            ${gateTab === "open" ? html`
+              <div class="cl-label">Password</div>
+              <input class="cl-input" type="password" value=${pw}
+                onInput=${(e) => setPw(e.target.value)}
+                onKeyDown=${(e) => e.key === "Enter" && openLedger()}
+                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" />
+              <button class="cl-btn" onClick=${openLedger} disabled=${gateBusy || !pw}>Unlock</button>
+            ` : html`
+              <div class="cl-label">Card owner (gets paid back)</div>
+              <input class="cl-input" value=${ownerName} onInput=${(e) => setOwnerName(e.target.value)} placeholder="e.g. Sam" maxLength="20" />
+              <div class="cl-gap"></div>
+              <div class="cl-label">Partner</div>
+              <input class="cl-input" value=${partnerName} onInput=${(e) => setPartnerName(e.target.value)} placeholder="e.g. Alex" maxLength="20" />
+              <div class="cl-gap"></div>
+              <div class="cl-label">Shared password</div>
+              <input class="cl-input" type="password" value=${createPw} onInput=${(e) => setCreatePw(e.target.value)} placeholder="At least 6 characters" />
+              <div class="cl-gap"></div>
+              <div class="cl-label">Confirm password</div>
+              <input class="cl-input" type="password" value=${createPw2} onInput=${(e) => setCreatePw2(e.target.value)} placeholder="Same again" />
+              <button class="cl-btn" onClick=${createLedger} disabled=${gateBusy}>Create ledger</button>
+            `}
+            ${gateMsg ? html`<div class="cl-error">${gateMsg}</div>` : null}
+          </div>
+          <div class="cl-foot">
+            You'll both use the same password. Each phone only needs it entered once.
+          </div>
+        </div></div>`;
+      }
+
+      // ---------- main ----------
+      const hint =
+        tag === "owner" ? `${names.owner}'s own \u2014 nothing owed`
+        : tag === "partner" ? `${names.partner} owes 99% (1% back)`
+        : `${names.partner} owes 49.5% of it`;
+
+      return html`<div class="cl-root"><div class="cl-shell">
+        <div class="cl-top">
+          <div class="cl-title">Our Card</div>
+          <span class=${"cl-live" + (live ? "" : " err")}>${live ? "\u25CF live" : "\u25CF reconnecting\u2026"}</span>
+        </div>
+
+        <div class="cl-card">
+          <div class="cl-card-row">
+            <div class="cl-chipgfx"></div>
+            <div class="cl-badge">3% BACK</div>
+          </div>
+          <div class="cl-owelabel">${names.partner} owes ${names.owner}</div>
+          <div class="cl-owe">${fmt(totalOwed)}</div>
+          <div class="cl-substats">
+            <span>cash back <b>${fmt(cashback)}</b></span>
+            <span>logged <b>${purchases.length}</b></span>
+          </div>
+        </div>
+
+        <div class="cl-panel">
+          <div class="cl-label">Amount</div>
+          <input class="cl-input cl-amt" value=${amt} onInput=${(e) => setAmt(e.target.value)} placeholder="0.00" inputmode="decimal" />
+          <div class="cl-gap"></div>
+          <div class="cl-label">What was it</div>
+          <input class="cl-input" value=${desc} onInput=${(e) => setDesc(e.target.value)} placeholder="Groceries, petrol, dinner\u2026" maxLength="40" />
+          <div class="cl-gap"></div>
+          <div class="cl-label">Whose expense</div>
+          <div class="cl-seg">
+            <button class=${tag === "owner" ? "on" : ""} onClick=${() => setTag("owner")}>${names.owner}</button>
+            <button class=${tag === "partner" ? "on" : ""} onClick=${() => setTag("partner")}>${names.partner}</button>
+            <button class=${tag === "shared" ? "on" : ""} onClick=${() => setTag("shared")}>Shared</button>
+          </div>
+          <div class="cl-seghint">${hint}</div>
+          <button class="cl-btn" onClick=${addPurchase} disabled=${busy}>Add purchase</button>
+          ${error ? html`<div class="cl-error">${error}</div>` : null}
+        </div>
+
+        <div class="cl-receipt">
+          ${purchases.length === 0
+            ? html`<div class="cl-empty">Nothing logged this cycle yet. Add the first purchase above.</div>`
+            : purchases.map((p) => {
+                const owed = owedCents(p);
+                return html`<div class="cl-row" key=${p.id}>
+                  <div class="cl-row-main">
+                    <div class="cl-row-desc">${p.desc}</div>
+                    <div class="cl-row-meta">
+                      <span>${new Date(p.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                      <span class=${"cl-chip " + p.tag}>${tagLabel(p.tag)}</span>
+                    </div>
+                  </div>
+                  <div class="cl-row-right">
+                    <div class="cl-row-amt">${fmt(p.cents)}</div>
+                    <div class=${"cl-row-owed" + (owed ? "" : " none")}>${owed ? "owes " + fmt(owed) : "\u2014"}</div>
+                  </div>
+                  <button class=${"cl-x" + (pendingDelete === p.id ? " confirm" : "")}
+                    onClick=${() => deletePurchase(p.id)} aria-label="Delete purchase">
+                    ${pendingDelete === p.id ? "sure?" : "\u2715"}
+                  </button>
+                </div>`;
+              })}
+        </div>
+
+        ${purchases.length > 0 ? (settleStep
+          ? html`<div class="cl-panel">
+              <div class="cl-label">Settle up</div>
+              <div class="cl-settle-note">
+                ${names.partner} has sent ${fmt(totalOwed)}? This archives
+                ${" " + purchases.length + " "}purchase${purchases.length === 1 ? "" : "s"} and resets the balance to zero.
+              </div>
+              <button class="cl-btn danger" onClick=${settleUp} disabled=${busy}>Confirm \u2014 settled</button>
+              <button class="cl-btn ghost" onClick=${() => setSettleStep(false)}>Cancel</button>
+            </div>`
+          : html`<button class="cl-btn" onClick=${() => setSettleStep(true)}>Settle up \u00B7 ${fmt(totalOwed)}</button>`
+        ) : null}
+
+        ${settlements.length > 0 ? html`<div>
+          <button class="cl-hist-toggle" onClick=${() => setShowHistory(!showHistory)}>
+            ${showHistory ? "hide" : "show"} past settlements (${settlements.length})
+          </button>
+          ${showHistory ? html`<div class="cl-receipt">
+            ${settlements.map((s) => html`<div class="cl-hist-row" key=${s.id}>
+              <div>
+                <div>${new Date(s.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</div>
+                <div class="cl-hist-meta">${s.count} purchases \u00B7 ${fmt(s.cashback)} cash back</div>
+              </div>
+              <div class="cl-hist-amt">${fmt(s.total)}</div>
+            </div>`)}
+          </div>` : null}
+        </div>` : null}
+
+        ${pwView ? html`<div class="cl-panel">
+          <div class="cl-label">Current password</div>
+          <input class="cl-input" type="password" value=${curPw} onInput=${(e) => setCurPw(e.target.value)} />
+          <div class="cl-gap"></div>
+          <div class="cl-label">New password</div>
+          <input class="cl-input" type="password" value=${newPw} onInput=${(e) => setNewPw(e.target.value)} placeholder="At least 6 characters" />
+          <div class="cl-gap"></div>
+          <div class="cl-label">Confirm new password</div>
+          <input class="cl-input" type="password" value=${newPw2} onInput=${(e) => setNewPw2(e.target.value)} placeholder="Same again" />
+          <button class="cl-btn" onClick=${changePassword} disabled=${busy || !curPw || newPw.length < 6}>Change password</button>
+          <button class="cl-btn ghost" onClick=${() => { setPwView(false); setPwError(""); }}>Cancel</button>
+          ${pwError ? html`<div class="cl-error">${pwError}</div>` : null}
+        </div>` : null}
+
+        <div class="cl-footbtns">
+          <button onClick=${lockDevice}>lock this device</button>
+          <span>\u00B7</span>
+          <button onClick=${() => { setPwView(!pwView); setPwError(""); }}>change password</button>
+        </div>
+        <div class="cl-foot">
+          Changing the password locks all devices until the new one is entered.
+          Tap \u2715 twice to delete a purchase.
+        </div>
+      </div></div>`;
+    }
+
+    render(h(App), document.getElementById("app"));
+
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
